@@ -50,4 +50,9 @@ class User extends Authenticatable
     public function products(){
         return $this->hasMany(Products::class);
     }
+
+    public function branch(){
+        return $this->hasOne(Branch::class);
+    }
+
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Products;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 
 class ProductsController extends Controller
@@ -13,10 +14,24 @@ class ProductsController extends Controller
      */
     public function index()
     {
-        try{
-            $products = Products::all();
+        try {
+            $user = Auth::user();
+            $query = Products::where('user_id', $user->id);
 
-            if($products->isEmpty()){
+            // Search by name or description
+            $search = request()->query('search');
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%$search%")
+                      ->orWhere('description', 'like', "%$search%");
+                });
+            }
+
+            // Pagination
+            $perPage = (int) request()->query('per_page', 10);
+            $products = $query->paginate($perPage)->appends(request()->query());
+
+            if ($products->isEmpty()) {
                 return response()->json([
                     'status' => 'error',
                     'error' => 'No products found',
@@ -28,9 +43,7 @@ class ProductsController extends Controller
                 'message' => 'Data has been retrieved.',
                 'data' => $products
             ], 200);
-
-        }catch (\Exception $e){
-
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to retrieve data',
@@ -85,7 +98,10 @@ class ProductsController extends Controller
     public function show($id)
     {
         try {
-            $product = Products::find($id);
+            
+            $user = Auth::user();
+
+            $product = Products::where('product_id', $id)->where('user_id', $user->id)->get()->first();
 
             if(!$product){
                 return response()->json([
@@ -156,7 +172,11 @@ class ProductsController extends Controller
     public function destroy($id)
     {
         try {
-             $product = Products::find($id);
+
+            $user = Auth::user();
+
+             $product = Products::where('product_id', $id)
+             ->where('user_id', $user->id)->get()->first();
 
             if(!$product){
                 return response()->json([
@@ -165,11 +185,14 @@ class ProductsController extends Controller
                 ], 404);
             }
 
+            $product->delete();
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Product has been deleted',
                 'data' => $product
             ], 200);
+
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
