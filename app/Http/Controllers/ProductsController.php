@@ -22,8 +22,8 @@ class ProductsController extends Controller
             $search = request()->query('search');
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%$search%")
-                      ->orWhere('description', 'like', "%$search%");
+                    $q->where('name', 'ilike', "%$search%")
+                      ->orWhere('description', 'ilike', "%$search%");
                 });
             }
 
@@ -120,7 +120,7 @@ class ProductsController extends Controller
 
             return response()->json([
                 'status' => 'error',
-                'message'=> 'Server Error',
+                'message' => 'Server Error',
                 'error' => $e->getMessage(),
             ], 500);
         }
