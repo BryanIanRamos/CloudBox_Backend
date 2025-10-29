@@ -106,7 +106,7 @@ class ProductsController extends Controller
             if(!$product){
                 return response()->json([
                     'status' => 'error',
-                    'error'=> 'Product does not exist',
+                    'error'=> 'Product not found',
                 ], 404);
             }
 

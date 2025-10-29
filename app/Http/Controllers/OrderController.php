@@ -122,14 +122,69 @@ class OrderController extends Controller
      */
     public function update(Request $request, Order $order)
     {
-        
+        try {
+
+            $userId = Auth::user()->id;
+
+            $validated = $request->validate([
+                'total_price' => 'nullable|numeric|between:0,999999.99',
+                'status' => 'nullable|string|max:100',
+            ]);
+
+            $order->update(array_filter($validated, function($value){
+                return $value !== null;
+            }));
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Order has been updated',
+                'data' => $order,
+            ], 200);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid Credentials',
+                'data' => $e->getMessage(),
+            ], 422);
+        } catch (\Exception $e){
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Server Error',
+                'data' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Order $order)
+    public function destroy($id)
     {
-        //
+        try {
+
+            $order = Order::where('order_id', $id)->first();
+
+            if($order->isEmpty()){
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Data not found',
+                ], 404);
+            }
+
+            $order->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data has been deleted',
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Server Error',
+                'error' => $e,
+            ], 500);
+        }
     }
 }
