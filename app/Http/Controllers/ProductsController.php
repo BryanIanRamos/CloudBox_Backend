@@ -41,7 +41,7 @@ class ProductsController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data has been retrieved.',
-                'data' => $products
+                'products' => $products
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
